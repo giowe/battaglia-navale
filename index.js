@@ -4,6 +4,7 @@ const { readFileSync } = require('fs');
 const { EOL } = require('os');
 const bodyParser = require('body-parser');
 const renderField = require('./render-field.js');
+const port = 8000;
 
 const players = {};
 const ships = {};
@@ -18,7 +19,8 @@ const field = {
         ships[shipId] = {
           shipId,
           maxHp: 1,
-          curHp: 1
+          curHp: 1,
+          killer: null
         };
       } else {
         ships[shipId].maxHp ++;
@@ -64,10 +66,11 @@ app.get('/info', (req, res) => {
       h: field.h,
       w: field.w
     },
-    ships: Object.values(ships).map(({ shipId, maxHp, curHp }) => ({
+    ships: Object.values(ships).map(({ shipId, maxHp, curHp, killer }) => ({
       shipId,
       maxHp,
-      alive: curHp > 0
+      alive: curHp > 0,
+      killer
     }))
   });
 });
@@ -102,22 +105,27 @@ app.post('/', ({ body: { x, y }, player }, res) => {
     }
     
     const cell = field.grid[y - 1][x - 1];
+    if (cell.hit) {
+      return res.status(150).json({
+        message: 'Already hit'
+      });
+    }
+
     cell.hit = player;
     const { ship } = cell;
     if (ship) {
-      if (ship.curHp !== 0) {
-        ship.curHp --;
-        if (ship.curHp === 0) {
-          ship.killer = player;
-          return res.status(130).json({
-            message: 'Killed'
-          });
-        } else {
-          return res.status(120).json({
-            message: 'Hit'
-          });
-        }
+      ship.curHp --;
+      if (ship.curHp === 0) {
+        ship.killer = player;
+        return res.status(130).json({
+          message: 'Killed'
+        });
+      } else {
+        return res.status(120).json({
+          message: 'Hit'
+        });
       }
+    
     } else {
       return res.status(110).json({
         message: `Attack at coords ${x} ${y}`
@@ -130,6 +138,6 @@ app.all('*', (req, res) => {
   res.status(404).send('page not found');
 });
 
-app.listen(8000, () => {
-  console.log('server listening on port 8000')
+app.listen(port, () => {
+  console.log(`server listening on port ${port}`)
 });

@@ -4,7 +4,7 @@ const css = readFileSync('./field.css').toString();
 const renderCell = cell => {
   const { ship, hit } = cell;
 
-  return `<td class="${!hit ? '' : ship ? 'colpito affondato' : 'colpito'}"></td>`;
+  return `<td class="${!hit ? '' : ship ? 'colpito affondato' : 'colpito'}">${hit ? hit : ''}</td>`;
 };
 
 module.exports = (field, players) => {
