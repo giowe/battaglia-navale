@@ -13,6 +13,17 @@ td {
   filter: sepia(1);
 }
 
+#field {
+  float: left
+}
+
+#players {
+  float: right;
+  background: #8bc34a85;
+  position: fixed;
+  right: 10px;
+}
+
 body {
   background: black;
 }

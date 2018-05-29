@@ -6,6 +6,10 @@ const bodyParser = require('body-parser');
 const renderField = require('./render-field.js');
 const port = 8000;
 
+setInterval(() => {
+  Object.values(players).forEach(p => p.loaded = true);
+}, 10000);
+
 const players = {};
 const ships = {};
 const field = {
@@ -41,7 +45,7 @@ app.use(bodyParser.json());
 
 app.use((error, req, res, next) => {
   if (error) {
-    res.send(400).json({
+    res.status(400).json({
         message: 'Invalid body'
     })
   } else {
@@ -53,10 +57,10 @@ app.use((req, res, next) => {
   const { connection: { remoteAddress } } = req;
   req.player = players[remoteAddress];
   next();
-})
+});
 
 app.get('/', (req, res) => {
-  res.send(renderField(field.grid));
+  res.send(renderField(field.grid, ships, players));
 });
 
 app.get('/info', (req, res) => {
@@ -64,7 +68,8 @@ app.get('/info', (req, res) => {
     players,
     field: {
       h: field.h,
-      w: field.w
+      w: field.w,
+      grid: field.grid.map(row => row.map(({ hit }) => hit))
     },
     ships: Object.values(ships).map(({ shipId, maxHp, curHp, killer }) => ({
       shipId,
@@ -76,11 +81,24 @@ app.get('/info', (req, res) => {
 });
 
 app.post('/signup', ({ connection: { remoteAddress }, body: { name } }, res) => {
-  if (!name) return res.status(400).json({
-    message: 'Missing name parameter'
-  });
+  if (!name) {
+    return res.status(400).json({
+      message: 'Missing name parameter'
+    });
+  }
 
-  players[remoteAddress] = name;
+  if (name.length > 6) {
+    return res.status(400).json({
+      message: 'Name too long'
+    });
+  }
+
+  players[remoteAddress] = {
+    name,
+    loaded: true,
+    score: 0
+  };
+
   res.json({
     message: 'Signup completed'
   });
@@ -93,6 +111,13 @@ app.post('/', ({ body: { x, y }, player }, res) => {
     });
   }
 
+  if (!player.loaded) {
+    return res.status(400).json({
+      code: 140,
+      message: 'Wait, reloading bullet'
+    })
+  }
+
   if (typeof x !== 'number' || typeof y !== 'number') {
     return res.status(400).json({
       message: 'Missing x or y in number format'
@@ -103,10 +128,14 @@ app.post('/', ({ body: { x, y }, player }, res) => {
         message: 'Out of bounds'
       });
     }
-    
+
+    player.loaded = false;
+
     const cell = field.grid[y - 1][x - 1];
     if (cell.hit) {
-      return res.status(150).json({
+      player.score -= 10;
+      return res.json({
+        code: 150,
         message: 'Already hit'
       });
     }
@@ -117,17 +146,23 @@ app.post('/', ({ body: { x, y }, player }, res) => {
       ship.curHp --;
       if (ship.curHp === 0) {
         ship.killer = player;
-        return res.status(130).json({
+        player.score += 50;
+
+        return res.json({
+          code: 130,
           message: 'Killed'
         });
       } else {
-        return res.status(120).json({
+        player.score += 10;
+        return res.json({
+          code: 120,
           message: 'Hit'
         });
       }
     
     } else {
-      return res.status(110).json({
+      return res.json({
+        code: 110,
         message: `Attack at coords ${x} ${y}`
       });
     }
