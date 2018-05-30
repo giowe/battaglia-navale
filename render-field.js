@@ -1,5 +1,4 @@
 const { readFileSync } = require('fs');
-const css = readFileSync('./field.css').toString();
 
 const renderCell = cell => {
   const { ship, hit } = cell;
@@ -8,6 +7,7 @@ const renderCell = cell => {
 };
 
 module.exports = (field, ships, players) => {
+  const css = readFileSync('./field.css').toString();
   return [
     `<style>${css}</style>`,
     '<table id="field">',
@@ -17,9 +17,25 @@ module.exports = (field, ships, players) => {
     '</table>',
     '<div id="players">',
       '<h1>Players:</h1>',
-      '<ul>',
-        ...Object.values(players).sort((a, b) => b.score - a.score).map(({ name, score }) => `<li>${name} | score: ${score}</li>`),
-      '</ul>',
+      '<table>',
+        '<thead>',
+          '<th><td>Name</td><td>Score</td></th>',
+        '</thead>',
+        '<tbody>',
+          ...Object.values(players).sort((a, b) => b.score - a.score).map(({ name, score }) => `<tr><td>${name}</td><td>${score}</td></tr>`),
+        '</tbody>',
+      '</table>',
+    '</div>',
+
+    '<div id="ships">',
+      '<h1>Ships:</h1>',
+      '<table>',
+        '<tbody>',
+          '<th><td>Id</td><td>maxHp</td><td>killer</td></th>',
+          ...Object.values(ships).map(({ shipId, maxHp, killer }) => `<tr><td>${shipId}</td><td>${maxHp}</td><td>${killer ? killer.name : 'NA'}</td></tr>`),
+        '</tbody>',
+      '</table>',
     '</div>'
+
   ].join('');
 };

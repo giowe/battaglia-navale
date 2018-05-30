@@ -93,6 +93,12 @@ app.post('/signup', ({ connection: { remoteAddress }, body: { name } }, res) => 
     });
   }
 
+  if (players[remoteAddress]) {
+    return res.status(400).json({
+      message: 'Already registered'
+    })
+  }
+
   players[remoteAddress] = {
     name,
     loaded: true,

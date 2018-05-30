@@ -1,15 +1,18 @@
-td.affondato {
+#field td.affondato {
   background-image: url(https://thumbs.gfycat.com/IlliterateFortunateBoutu-max-1mb.gif);
   filter: sepia(0);
 }
 
-td {
+#field td {
   background-image: url(https://media.giphy.com/media/gjMJoQtk0OIWk/giphy.gif);
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
+  color: white;
+  font-family: sans-serif;
+  text-shadow: 1px 1px #000000;
 }
 
-.colpito { 
+#field .colpito {
   filter: sepia(1);
 }
 
@@ -17,11 +20,36 @@ td {
   float: left
 }
 
-#players {
+#players, #ships {
+  padding: 10px;
+  border: 2px solid white;
+  color: white;
+  font-family: sans-serif;
+  text-shadow: 1px 1px #000000;
+  display: block;
   float: right;
-  background: #8bc34a85;
-  position: fixed;
-  right: 10px;
+  margin: 10px;
+}
+
+#players {
+  background: rgba(49, 167, 195, 1);
+}
+
+#ships {
+  background: rgba(195, 43, 0, 1);
+}
+
+#players ul {
+  padding: 5px;
+  list-style: none;
+}
+
+#players .score {
+  text-align: right;
+}
+
+#players .name {
+  text-align: left;
 }
 
 body {
